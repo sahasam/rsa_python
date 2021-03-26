@@ -1,7 +1,9 @@
-## @file
-#  encryptor.py
-#
-#  This is where the encryption magic happens...
+"""!
+@file
+encryptor.py
+
+This is where the encryption magic happens...
+"""
 from random import randint
 
 def is_prime(b:int) -> bool:
@@ -14,31 +16,14 @@ def is_prime(b:int) -> bool:
     @return true if b is extremely likely to be prime else false.
     """
     for _ in range(100):
-        a = randint(1, num-1)
-        if not (gcd(a, b) == 1 and jacobi(a, b) == pow(a, ((b-1)/2), b)):
+        a = randint(1, b-1)
+        if not (gcd(a, b) == 1 and pow(a, (b-1), b) == 1):
             return False
-
     return True
 
-def jacobi(a:int, b:int) -> int:
-    """!
-    @brief calculate the Jacobi. Helper function in determining if a
-    number is prime or not
-
-    @param a first number
-    @param b second number
-    @return J(a, b)
-    """
-    if a == 1:
-        return 1
-
-    if a%2 == 0:
-        return jacobi(a/2, b) * (-1)**((b**(2)-1)/8)
-    else:
-        return jacobi(b % a, a) * (-1)**((a-1)*(b-1)/4)
 
 
-def gcd(a, b):
+def gcd(a:int, b:int)->int:
     """!
     @brief implementation of binary gcd algorithm as a
     helper function.
@@ -53,16 +38,16 @@ def gcd(a, b):
         return a
     elif a == 0:
         return b
-    elif v == 0:
+    elif b == 0:
         return a
 
-    # u is even
+    # a is even
     if a & 1 == 0:
         if b & 1 == 0:
             return 2*gcd(a>>1, b>>1)
         else:
             return gcd(a>>1, b)
-    # u is odd
+    # a is odd
     else:
         if b & 1 == 0:
             return gcd(a, b >> 1)
@@ -70,7 +55,6 @@ def gcd(a, b):
             return gcd((a-b) >> 1, b)
         else:
             return gcd((b-a) >> 1, a)
-
 
 
 def generate_primes():
@@ -85,16 +69,23 @@ def generate_primes():
     range_start = 10**(99) # 1 with 99 zeros
     range_end = 10**(100)-1 # 100 9's
 
+    # generate a first 100 digit prime number
     finished = False
-    num = 0
+    e = 0
+    while(not finished):
+        e = randint(range_start, range_end)
+        finished = is_prime(e)
 
-    while(!finished) {
-        # generate random 100 digit number
-        num = randint(range_start, range_end)
-        finished = isPrime(num)
-    }
+    # generate a second prime number that is far from e
+    i = 2
+    d = 0
+    finished = False
+    while not finished:
+        d = i * e + 1
+        finished = is_prime(d)
+        i += 2
 
-
+    return (e * d, e, d)
 
 
 def main():
