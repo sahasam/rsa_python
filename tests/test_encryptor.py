@@ -1,7 +1,7 @@
 # Testing file for methods in rsapy.encryptor.py
 
 import unittest
-from rsapy.encryptor import gcd, generate_primes, is_prime
+from rsapy.encryptor import gcd, generate_primes, is_prime, generate_keys
 
 class TestEncryptor(unittest.TestCase):
     def test_gcd(self):
@@ -27,3 +27,16 @@ class TestEncryptor(unittest.TestCase):
         self.assertEqual(e*d, n)
         self.assertEqual(is_prime(e), True)
         self.assertEqual(is_prime(d), True)
+
+    def test_generate_keys(self):
+        n, p, q, totient, e, d = generate_keys()
+        self.assertEqual(p * q, n)
+        self.assertEqual(d, pow(e, -1, totient))
+        self.assertEqual(e, pow(d, -1, totient))
+        self.assertEqual(is_prime(p), True)
+        self.assertEqual(is_prime(q), True)
+        self.assertEqual(gcd(d, totient), 1)
+        self.assertEqual(gcd(e, totient), 1)
+
+if __name__ == "__main__":
+    unittest.main()

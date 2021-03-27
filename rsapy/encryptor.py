@@ -6,6 +6,46 @@ This is where the encryption magic happens...
 """
 from random import randint
 
+
+class RSAKeyPair:
+    """!
+    @brief class to encapsulate Key Pair functions.
+
+    Can encrypt messages, decrypt messages, and create
+    signatures.
+    """
+
+    def __init__(self, n, e, d):
+        """!
+        @brief Create a RSAKeyPair object
+
+        @param n product of e and d
+        @param e large prime number
+        @param d large prime number
+        """
+        ## product of e and d
+        self.n = n
+
+        ## large prime number 1
+        self.e = e
+
+        ## large prime number 2
+        self.d = d
+
+    def private_key(self):
+        """!
+        @brief return private key prime.
+        @return (d, n)
+        """
+        return (d, n)
+
+    def public_key(self):
+        """!
+        @brief return public key.
+        @return (e, n)
+        """
+        return (e, n)
+
 def is_prime(b:int) -> bool:
     """!
     @brief helper function to verify if a number is prime.
@@ -60,33 +100,48 @@ def gcd(a:int, b:int)->int:
 def generate_primes():
     """!
     @brief Generate a large number N that is the product of
-    two 100 digit prime numbers, e and d
+    two 100 digit prime numbers, $$ p*q = N $$.
 
-    @return (N, e, d) where e and d are large prime numbers whose
+    @return (N, p, q) where p and q are large prime numbers whose
             product is N
     """
     # generate a random 100 digit odd number.
     range_start = 10**(99) # 1 with 99 zeros
     range_end = 10**(100)-1 # 100 9's
 
-    # generate a first 100 digit prime number
-    finished = False
-    e = 0
-    while(not finished):
-        e = randint(range_start, range_end)
-        finished = is_prime(e)
+    primes = [0, 0]
+    for i in range(2):
+        # generate a temporary 100 digit random prime number
+        finished = False
+        tmp = 0
+        while(not finished):
+            tmp = randint(range_start, range_end)
+            finished = is_prime(tmp)
 
-    # generate a second prime number that is far from e
-    i = 2
-    d = 0
-    finished = False
-    while not finished:
-        d = i * e + 1
-        finished = is_prime(d)
-        i += 2
+        # find a prime number k that has tmp so that
+        # k - 1 has a large prime factor
+        j = 2
+        finished = False
+        while not finished:
+            primes[i] = j * tmp + 1
+            finished = is_prime(primes[i])
+            j += 2
 
-    return (e * d, e, d)
+    return (primes[0] * primes[1], primes[0], primes[1])
+
+def generate_keys():
+    """!
+    @brief generate an RSAKeyPair for encryption and decyrption
+
+    @return RSAKeyPair instance
+    """
+    n, p, q = generate_primes()
+    totient = (p-1) * (q-1)
+    e = 65537 #2^16 + 1
+    d = pow(e, -1, totient) # mod inverse
+
+    return (n, p, q, totient, e, d)
 
 
 def main():
-    print("This is the end...")
+    print("Main method")
