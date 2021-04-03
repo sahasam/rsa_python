@@ -1,7 +1,8 @@
 # Testing file for methods in rsapy.encryptor.py
 
 import unittest
-from rsapy.encryptor import gcd, generate_primes, is_prime, generate_keys
+from rsapy.encryptor import *
+from rsapy.util import *
 
 class TestEncryptor(unittest.TestCase):
     def test_gcd(self):
@@ -37,6 +38,18 @@ class TestEncryptor(unittest.TestCase):
         self.assertEqual(is_prime(q), True)
         self.assertEqual(gcd(d, totient), 1)
         self.assertEqual(gcd(e, totient), 1)
+
+class TestKeys(unittest.TestCase):
+    def test_RSAKeyPair(self):
+        n, p, q, totient, e, d = generate_keys()
+
+        prk = RSAPrivateKey(n, d)
+        pbk = RSAPublicKey(n, e)
+        rsa_kp = RSAKeyPair(prk, pbk)
+        print(str(prk))
+        print(str(pbk))
+        self.assertEqual(True, True)
+
 
 if __name__ == "__main__":
     unittest.main()
