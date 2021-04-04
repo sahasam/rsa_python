@@ -27,10 +27,7 @@ def is_prime(b:int) -> bool:
 
 def gcd(a:int, b:int)->int:
     """!
-    @brief implementation of binary gcd algorithm as a
-    helper function.
-
-    credit to https://radiusofcircle.blogspot.com/2016/10/binary-gcd-algorithm-implementation.html
+    @brief implementation of gcd algorithm
 
     @param a first number
     @param b second number
@@ -41,7 +38,7 @@ def gcd(a:int, b:int)->int:
     return a
 
 
-def generate_primes(size=32):
+def generate_primes(size:int):
     """!
     @brief Generate a large number N that is the product of
     two 100 digit prime numbers, $$ p*q = N $$.

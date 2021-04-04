@@ -8,9 +8,10 @@ class RSAPrivateKey:
     """!
     @brief Private Key encapsulation class
     """
-    def __init__(self, modulus:int, exponent:int):
+    def __init__(self, modulus:int, exponent:int, size:int):
         self.n = modulus
         self.d = exponent
+        self.size = size
 
     def from_file(filename:str):
         """!
@@ -24,12 +25,12 @@ class RSAPrivateKey:
         f.close()
         return RSAPrivateKey(modulus=n, exponent=d)
 
-    def use(message):
+    def use(self, block:int):
         """!
         @brief use the key
         @return unscrambled message
         """
-        pass
+        return pow(block, self.d, self.n)
 
     def __str__(self):
         """!
@@ -44,9 +45,10 @@ class RSAPublicKey:
     """!
     @brief Public Key encapsulation class
     """
-    def __init__(self, modulus, exponent):
+    def __init__(self, modulus:int, exponent:int, size:int):
         self.n = modulus
         self.e = exponent
+        self.size = size
 
     def from_file(filename:str):
         """!
@@ -60,12 +62,13 @@ class RSAPublicKey:
         f.close()
         return RSAPublicKey(modulus=n, exponent=e)
 
-    def use(message):
+    def use(self, block:int):
         """!
         @brief use the key
         @return scrambled message
         """
-        pass
+        # TODO check message size
+        return pow(block, self.e, self.n)
 
     def __str__(self):
         """!
@@ -89,10 +92,18 @@ class RSAKeyPair:
 
         @param private RSAPrivateKey instance
         @param public RSAPublicKey instance
+        @param size number of bytes per prime
         """
         # TODO: check that public and private key are a proper pair
+        assert private.size == public.size
         self.private_key = private
         self.public_key = public
+
+    def encrypt(self, message:int) -> int:
+        return self.public_key.use(message)
+
+    def decrypt(self, message:int) -> int:
+        return self.private_key.use(message)
 
     def get_private_key(self):
         """!
@@ -109,18 +120,20 @@ class RSAKeyPair:
         return self.public_key
 
 
-def generate_keys():
+def generate_keys(size:int=32):
     """!
     @brief generate an RSAKeyPair for encryption and decyrption
 
     @return RSAKeyPair instance
     """
-    n, p, q = generate_primes()
+    n, p, q = generate_primes(size)
     totient = (p-1) * (q-1)
     e = 65537 #2^16 + 1
     d = pow(e, -1, totient) # mod inverse
 
-    return (n, p, q, totient, e, d)
+    privateKey = RSAPrivateKey(modulus=n, exponent=d, size=size)
+    publicKey = RSAPublicKey(modulus=n, exponent=e, size=size)
+    return RSAKeyPair(privateKey, publicKey)
 
 
 def main():

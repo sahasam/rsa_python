@@ -1,10 +1,11 @@
 # Testing file for methods in rsapy.encryptor.py
 
 import unittest
+import os, sys
 from rsapy.encryptor import *
 from rsapy.util import *
 
-class TestEncryptor(unittest.TestCase):
+class TestUtil(unittest.TestCase):
     def test_gcd(self):
         """Test gcd helper function"""
         self.assertEqual(gcd(20, 4), 4)
@@ -24,31 +25,31 @@ class TestEncryptor(unittest.TestCase):
 
     def test_generate_primes(self):
         """Test generation of prime numbers"""
-        n, e, d = generate_primes()
+        n, e, d = generate_primes(16)
         self.assertEqual(e*d, n)
         self.assertEqual(is_prime(e), True)
         self.assertEqual(is_prime(d), True)
 
+        n, e, d = generate_primes(128)
+        self.assertEqual(e*d, n)
+        self.assertEqual(is_prime(e), True)
+        self.assertEqual(is_prime(d), True)
+
+class TestEncryptor(unittest.TestCase):
     def test_generate_keys(self):
-        n, p, q, totient, e, d = generate_keys()
-        self.assertEqual(p * q, n)
-        self.assertEqual(d, pow(e, -1, totient))
-        self.assertEqual(e, pow(d, -1, totient))
-        self.assertEqual(is_prime(p), True)
-        self.assertEqual(is_prime(q), True)
-        self.assertEqual(gcd(d, totient), 1)
-        self.assertEqual(gcd(e, totient), 1)
+        rkp = generate_keys()
 
-class TestKeys(unittest.TestCase):
-    def test_RSAKeyPair(self):
-        n, p, q, totient, e, d = generate_keys()
+        message = 150
+        encr = rkp.encrypt(message)
+        decr = rkp.decrypt(encr)
+        self.assertEqual(decr, message)
 
-        prk = RSAPrivateKey(n, d)
-        pbk = RSAPublicKey(n, e)
-        rsa_kp = RSAKeyPair(prk, pbk)
-        print(str(prk))
-        print(str(pbk))
-        self.assertEqual(True, True)
+        rkp = generate_keys(size=64)
+        message = int.from_bytes(os.urandom(60), sys.byteorder)
+        encr = rkp.encrypt(message)
+        decr = rkp.decrypt(encr)
+        self.assertEqual(decr, message)
+
 
 
 if __name__ == "__main__":
