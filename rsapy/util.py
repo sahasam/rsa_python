@@ -5,6 +5,8 @@ util.py
 Helper functions for encryption
 """
 from random import randint
+import sys
+import os
 
 def is_prime(b:int) -> bool:
     """!
@@ -34,34 +36,16 @@ def gcd(a:int, b:int)->int:
     @param b second number
     @return greatest common divisor
     """
-    if a == b:
-        return a
-    elif a == 0:
-        return b
-    elif b == 0:
-        return a
-
-    # a is even
-    if a & 1 == 0:
-        if b & 1 == 0:
-            return 2*gcd(a>>1, b>>1)
-        else:
-            return gcd(a>>1, b)
-    # a is odd
-    else:
-        if b & 1 == 0:
-            return gcd(a, b >> 1)
-        elif a > b and b & 1 != 0:
-            return gcd((a-b) >> 1, b)
-        else:
-            return gcd((b-a) >> 1, a)
+    while b:
+        a, b = b , a % b
+    return a
 
 
-def generate_primes():
+def generate_primes(size=32):
     """!
     @brief Generate a large number N that is the product of
     two 100 digit prime numbers, $$ p*q = N $$.
-
+    @param size number of bits in prime. Defaults to 32 bytes or 256 bits.
     @return (N, p, q) where p and q are large prime numbers whose
             product is N
     """
@@ -75,7 +59,7 @@ def generate_primes():
         finished = False
         tmp = 0
         while(not finished):
-            tmp = randint(range_start, range_end)
+            tmp = int.from_bytes(os.urandom(128),sys.byteorder)
             finished = is_prime(tmp)
 
         # find a prime number k that has tmp so that

@@ -1,8 +1,6 @@
 """!
 @file
 encryptor.py This is where the encryption magic happens...  """
-from random import randint
-
 from rsapy.util import generate_primes
 
 
