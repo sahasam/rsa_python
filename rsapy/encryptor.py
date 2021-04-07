@@ -2,6 +2,7 @@
 @file
 encryptor.py This is where the encryption magic happens...  """
 from rsapy.util import generate_primes
+import base64
 
 
 class RSAPrivateKey:
@@ -39,6 +40,19 @@ class RSAPrivateKey:
         @return string representation of private key
         """
         return f"{self.n}\n{self.d}\n"
+    def write_to_file(self, filename:str):
+        try:
+            f = open(filename, 'wb+')
+            f.write(b'-----BEGIN PRIVATE KEY-----\n')
+
+            # write base64 encoded key
+            encoded = base64.b64encode(bytes(self.__str__(), 'utf-8'))
+            f.write(encoded + b'\n-----END PRIVATE KEY-----\n')
+        except OSError as e:
+            print(e)
+            raise
+        finally:
+            f.close()
 
 
 class RSAPublicKey:
@@ -78,6 +92,21 @@ class RSAPublicKey:
         """
         return f"{self.n}\n{self.e}\n"
 
+    def write_to_file(self, filename:str):
+        try:
+            f = open(filename, 'wb+')
+            f.write(b'-----BEGIN PUBLIC KEY-----\n')
+
+            # write base64 encoded key
+            encoded = base64.b64encode(bytes(self.__str__(), 'utf-8'))
+            f.write(encoded + b'\n-----END PUBLIC KEY-----\n')
+        except OSError as e:
+            print(e)
+            raise
+        finally:
+            f.close()
+
+
 class RSAKeyPair:
     """!
     @brief class to encapsulate Key Pair functions.
@@ -94,7 +123,6 @@ class RSAKeyPair:
         @param public RSAPublicKey instance
         @param size number of bytes per prime
         """
-        # TODO: check that public and private key are a proper pair
         assert private.size == public.size
         self.private_key = private
         self.public_key = public
