@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['gcd_27',['gcd',['../namespacersapy_1_1encryptor.html#a69b11cb361598d3a97cf71d46b5b7059',1,'rsapy::encryptor']]],
-  ['generate_5fprimes_28',['generate_primes',['../namespacersapy_1_1encryptor.html#a7f322b362cb7f5d8c97adc79850fea37',1,'rsapy::encryptor']]]
+  ['decrypt_44',['decrypt',['../classrsapy_1_1encryptor_1_1RSAKeyPair.html#a4befd8fd8ae9c0a2ff7267ab4748fa0b',1,'rsapy::encryptor::RSAKeyPair']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['main_9',['main',['../namespacersapy_1_1____main____.html#af0f7134029fbdd7825cc3c9d3a60765f',1,'rsapy.__main__.main()'],['../namespacersapy_1_1encryptor.html#acfe965958af75b6272ce9d81c4d4635b',1,'rsapy.encryptor.main()']]]
+  ['is_5fprime_15',['is_prime',['../namespacersapy_1_1util.html#a4d4b46d5835b2247cd56d13e6064bad2',1,'rsapy::util']]]
 ];

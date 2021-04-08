@@ -51,7 +51,7 @@ class TestEncryptor(unittest.TestCase):
         self.assertEqual(decr, message)
 
     def test_write_keys(self):
-        rkp = generate_keys()
+        rkp = generate_keys(1024)
         rkp.private_key.write_to_file("private.pem")
         rkp.public_key.write_to_file("public.pem")
 

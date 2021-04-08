@@ -3,6 +3,8 @@
 encryptor.py This is where the encryption magic happens...  """
 from rsapy.util import generate_primes
 import base64
+import time
+import asn1
 
 
 class RSAPrivateKey:
@@ -40,14 +42,28 @@ class RSAPrivateKey:
         @return string representation of private key
         """
         return f"{self.n}\n{self.d}\n"
+
     def write_to_file(self, filename:str):
+        """!
+        @brief write private key to file.
+        @param filename name of file to write to
+        """
         try:
             f = open(filename, 'wb+')
             f.write(b'-----BEGIN PRIVATE KEY-----\n')
 
             # write base64 encoded key
-            encoded = base64.b64encode(bytes(self.__str__(), 'utf-8'))
-            f.write(encoded + b'\n-----END PRIVATE KEY-----\n')
+            encoder = asn1.Encoder()
+            encoder.start()
+            encoder.write(self.n)
+            encoder.write(self.d)
+
+            encoded = base64.b64encode(encoder.output())
+            while(len(encoded) > 64):
+                f.write(encoded[:64] + b'\n')
+                encoded = encoded[64:]
+            f.write(encoded + b'\n')
+            f.write(b'-----END PRIVATE KEY-----\n')
         except OSError as e:
             print(e)
             raise
@@ -98,8 +114,17 @@ class RSAPublicKey:
             f.write(b'-----BEGIN PUBLIC KEY-----\n')
 
             # write base64 encoded key
-            encoded = base64.b64encode(bytes(self.__str__(), 'utf-8'))
-            f.write(encoded + b'\n-----END PUBLIC KEY-----\n')
+            encoder = asn1.Encoder()
+            encoder.start()
+            encoder.write(self.n)
+            encoder.write(self.e)
+
+            encoded = base64.b64encode(encoder.output())
+            while(len(encoded) > 64):
+                f.write(encoded[:64] + b'\n')
+                encoded = encoded[64:]
+            f.write(encoded + b'\n')
+            f.write(b'-----END PRIVATE KEY-----\n')
         except OSError as e:
             print(e)
             raise
@@ -148,7 +173,7 @@ class RSAKeyPair:
         return self.public_key
 
 
-def generate_keys(size:int=32):
+def generate_keys(size:int = 32):
     """!
     @brief generate an RSAKeyPair for encryption and decyrption
 
