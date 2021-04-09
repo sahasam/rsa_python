@@ -2,6 +2,8 @@
 @file
 encryptor.py This is where the encryption magic happens...  """
 from rsapy.util import generate_primes
+import sys
+import math
 import base64
 import time
 import asn1
@@ -183,14 +185,57 @@ class RSAKeyPair:
         @param public RSAPublicKey instance
         @param size number of bytes per prime
         """
+        assert private.n == public.n
         self.private_key = private
         self.public_key = public
 
     def encrypt(self, message:int) -> int:
         return self.public_key.use(message)
 
+    def encrypt_file(self, infilename:str, outfilename:str):
+        max_block_size = self.public_key.n.bit_length()
+
+        try:
+            infile = open(infilename, 'rb')
+            outfile = open(outfilename, 'wb+')
+
+            file_data = infile.read(max_block_size)
+            while file_data:
+                file_data_int = int.from_bytes(file_data, sys.byteorder)
+                encr_data_int = self.encrypt(file_data_int)
+                num_encr_bytes = math.ceil(encr_data_int.bit_length()/8)
+                outfile.write(encr_data_int.to_bytes(num_encr_bytes, sys.byteorder))
+                file_data = infile.read(max_block_size)
+
+            infile.close()
+            outfile.close()
+        except OSError as e:
+            print(e)
+            raise
+
     def decrypt(self, message:int) -> int:
         return self.private_key.use(message)
+
+    def decrypt_file(self, infilename:str, outfilename:str):
+        max_block_size = self.public_key.n.bit_length()
+
+        try:
+            infile = open(infilename, 'rb')
+            outfile = open(outfilename, 'wb+')
+
+            file_data = infile.read(max_block_size)
+            while file_data:
+                file_data_int = int.from_bytes(file_data, sys.byteorder)
+                decr_data_int = self.decrypt(file_data_int)
+                num_decr_bytes = math.ceil(decr_data_int.bit_length()/8)
+                outfile.write(decr_data_int.to_bytes(num_decr_bytes, sys.byteorder))
+                file_data = infile.read(max_block_size)
+
+            infile.close()
+            outfile.close()
+        except OSError as e:
+            print(e)
+            raise
 
     def get_private_key(self):
         """!
@@ -210,7 +255,6 @@ class RSAKeyPair:
 def generate_keys(size:int = 32):
     """!
     @brief generate an RSAKeyPair for encryption and decyrption
-
     @return RSAKeyPair instance
     """
     n, p, q = generate_primes(size)

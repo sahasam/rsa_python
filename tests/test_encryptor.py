@@ -61,6 +61,19 @@ class TestEncryptor(unittest.TestCase):
         privkey =  RSAPrivateKey.from_file("private.pem")
         self.assertEqual(rkp.private_key, privkey)
 
+    def test_file_encryption(self):
+        rkp = generate_keys(64)
+        rkp.encrypt_file(infilename="testfile.txt",outfilename="testfile.encr")
+        rkp.decrypt_file(infilename="testfile.encr",outfilename="outfile.txt")
+
+        origfile = open("testfile.txt", 'r')
+        outfile = open("outfile.txt", 'r')
+        orig_lines = origfile.readlines()
+        out_lines = outfile.readlines()
+        origfile.close()
+        outfile.close()
+
+        self.assertEqual(orig_lines, out_lines)
 
 if __name__ == "__main__":
     unittest.main()
