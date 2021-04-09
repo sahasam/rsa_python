@@ -47,16 +47,12 @@ def generate_primes(size:int):
             product is N
     """
     # generate a random 100 digit odd number.
-    range_start = 10**(99) # 1 with 99 zeros
-    range_end = 10**(100)-1 # 100 9's
-
     primes = [0, 0]
     for i in range(2):
-        # generate a temporary 100 digit random prime number
         finished = False
         tmp = 0
         while(not finished):
-            tmp = int.from_bytes(os.urandom(128),sys.byteorder)
+            tmp = int.from_bytes(os.urandom(size),sys.byteorder)
             finished = is_prime(tmp)
 
         # find a prime number k that has tmp so that

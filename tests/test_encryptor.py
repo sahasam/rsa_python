@@ -50,12 +50,16 @@ class TestEncryptor(unittest.TestCase):
         decr = rkp.decrypt(encr)
         self.assertEqual(decr, message)
 
-    def test_write_keys(self):
-        rkp = generate_keys(1024)
+    def test_file_io(self):
+        rkp = generate_keys(64)
         rkp.private_key.write_to_file("private.pem")
         rkp.public_key.write_to_file("public.pem")
 
+        pubkey = RSAPublicKey.from_file("public.pem")
+        self.assertEqual(rkp.public_key, pubkey)
 
+        privkey =  RSAPrivateKey.from_file("private.pem")
+        self.assertEqual(rkp.private_key, privkey)
 
 
 if __name__ == "__main__":
