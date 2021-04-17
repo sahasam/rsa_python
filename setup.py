@@ -12,5 +12,5 @@ setup(
     url='https://github.com/sahasam/rsa_python',
     license='MIT License',
     packages=find_packages(),
-    entry_points={"console_scripts": ["rsapy=rsapy.__main__:main"]},
+    entry_points={"console_scripts": ["crypt=rsapy.__main__:main"]},
 )

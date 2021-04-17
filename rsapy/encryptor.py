@@ -12,6 +12,11 @@ class KeyNotFoundError(Exception):
     pass
 
 class RSAKey:
+    """
+    @brief parent class for Private and Public Keys.
+
+    Not meant to be used directly
+    """
     def __init__(self, modulus:int, exponent:int):
         """!
         @brief init function to create a RSAKey
@@ -22,10 +27,10 @@ class RSAKey:
     def __str__(self):
         """!
         @brief string representation of a public key
-        Can be written to a file to be used later with from_file(filename)
+        can be used for testing purposes
         @return string representation of private key
         """
-        return f"{self.n}\n{self.e}\n"
+        return f"{self.n}\n{self.e}"
 
     def __eq__(self, other):
         """!
@@ -44,6 +49,14 @@ class RSAKey:
         return pow(block, self.e, self.n)
 
     def _get_b64_encode(self) -> bytes:
+        """!
+        @brief get base64 interpretation of key
+
+        Encodes modulus and exponent (in that order) to ASN.1
+        Takes the resulting bytes and translates them to base64
+
+        @return bytes representing base64 string
+        """
         encoder = asn1.Encoder()
         encoder.start()
         encoder.write(self.n)
@@ -109,7 +122,46 @@ class RSAPrivateKey (RSAKey):
         finally:
             f.close()
 
+    def _decrypt(self, message:int) -> int:
+        """!
+        @brief convert a normal int to encrypted using public key
 
+        message must be contained in less than, or the same amount, of bits
+        used to represent the modulus. Otherwise, information loss will occur.
+
+        @param message int to convert
+        @return ciphertext in int form
+        """
+        max_block_size = math.ceil(self.n.bit_length() / 8)
+        if math.ceil(message.bit_length()/8) > max_block_size:
+            raise OverflowError
+
+        return self.use(message)
+
+    def decrypt_file(self, infilename:str, outfilename:str):
+        """!
+        @brief decrypt a file and save the decyrpted version to a file
+
+        @param infilename filename of file to decrypt
+        @param outfilename filename of output file
+        """
+        try:
+            infile = open(infilename, 'rb')
+            outfile = open(outfilename, 'wb+')
+
+            file_data = infile.read()
+            max_block_size = math.ceil(self.n.bit_length() / 8)
+
+            # decrypt int
+            file_data_int = int.from_bytes(file_data, sys.byteorder)
+            decr_data_int = self._decrypt(file_data_int)
+
+            # convert decrypted int -> bytes for output
+            num_decr_bytes = math.ceil(decr_data_int.bit_length()/8)
+            outfile.write(decr_data_int.to_bytes(num_decr_bytes, sys.byteorder))
+        finally:
+            infile.close()
+            outfile.close()
 
 class RSAPublicKey(RSAKey):
     """!
@@ -170,6 +222,51 @@ class RSAPublicKey(RSAKey):
         finally:
             f.close()
 
+    def _encrypt(self, message:int) -> int:
+        """!
+        @brief convert a normal int to encrypted using public key
+
+        message must be contained in less than, or the same amount, of bits
+        used to represent the modulus. Otherwise, information loss will occur.
+
+        @param message int to convert
+        @return ciphertext in int form
+        """
+        max_block_size = math.ceil(self.n.bit_length() / 8)
+        if math.ceil(message.bit_length()/8) > max_block_size:
+            raise OverflowError
+        return self.use(message)
+
+    def encrypt_file(self, infilename:str, outfilename:str):
+        """!
+        @brief encrypt a file and save encrypted version to a file
+
+        @param infilename filename of file to encrypt
+        @param outfilename filename of output file
+        """
+        try:
+            infile = open(infilename, 'rb')
+            outfile = open(outfilename, 'wb+')
+
+            # read file data
+            file_data = infile.read()
+
+            max_block_size = math.ceil(self.n.bit_length() / 8)
+
+            # encrypt file data
+            file_data_int = int.from_bytes(file_data, sys.byteorder)
+            encr_data_int = self._encrypt(file_data_int)
+            if( math.ceil(encr_data_int.bit_length()/8)> max_block_size ):
+                raise OverflowError("encrypted data is too large for key size")
+
+            # write ciphertext to file
+            num_encr_bytes = math.ceil(encr_data_int.bit_length()/8)
+            outfile.write(encr_data_int.to_bytes(num_encr_bytes, sys.byteorder))
+        finally:
+            infile.close()
+            outfile.close()
+
+
 class RSAKeyPair:
     """!
     @brief class to encapsulate Key Pair functions.
@@ -188,54 +285,19 @@ class RSAKeyPair:
         assert private.n == public.n
         self.private_key = private
         self.public_key = public
+        self.max_block_size = math.ceil(public.n.bit_length()/8)
 
-    def encrypt(self, message:int) -> int:
-        return self.public_key.use(message)
-
-    def encrypt_file(self, infilename:str, outfilename:str):
-        max_block_size = self.public_key.n.bit_length()
-
-        try:
-            infile = open(infilename, 'rb')
-            outfile = open(outfilename, 'wb+')
-
-            file_data = infile.read(max_block_size)
-            while file_data:
-                file_data_int = int.from_bytes(file_data, sys.byteorder)
-                encr_data_int = self.encrypt(file_data_int)
-                num_encr_bytes = math.ceil(encr_data_int.bit_length()/8)
-                outfile.write(encr_data_int.to_bytes(num_encr_bytes, sys.byteorder))
-                file_data = infile.read(max_block_size)
-
-            infile.close()
-            outfile.close()
-        except OSError as e:
-            print(e)
-            raise
-
-    def decrypt(self, message:int) -> int:
-        return self.private_key.use(message)
+    def _decrypt(self, message:int) -> int:
+        return self.private_key._decrypt(message)
 
     def decrypt_file(self, infilename:str, outfilename:str):
-        max_block_size = self.public_key.n.bit_length()
+        self.private_key.decrypt_file(infilename, outfilename)
 
-        try:
-            infile = open(infilename, 'rb')
-            outfile = open(outfilename, 'wb+')
+    def _encrypt(self, message:int) -> int:
+        return self.public_key._encrypt(message)
 
-            file_data = infile.read(max_block_size)
-            while file_data:
-                file_data_int = int.from_bytes(file_data, sys.byteorder)
-                decr_data_int = self.decrypt(file_data_int)
-                num_decr_bytes = math.ceil(decr_data_int.bit_length()/8)
-                outfile.write(decr_data_int.to_bytes(num_decr_bytes, sys.byteorder))
-                file_data = infile.read(max_block_size)
-
-            infile.close()
-            outfile.close()
-        except OSError as e:
-            print(e)
-            raise
+    def encrypt_file(self, infilename:str, outfilename:str):
+        self.public_key.encrypt_file(infilename, outfilename)
 
     def get_private_key(self):
         """!
@@ -252,9 +314,10 @@ class RSAKeyPair:
         return self.public_key
 
 
-def generate_keys(size:int = 32):
+def generate_keys(size:int = 256):
     """!
     @brief generate an RSAKeyPair for encryption and decyrption
+    @param size number of bits in modulus
     @return RSAKeyPair instance
     """
     n, p, q = generate_primes(size)
@@ -265,7 +328,3 @@ def generate_keys(size:int = 32):
     privateKey = RSAPrivateKey(modulus=n, exponent=d)
     publicKey = RSAPublicKey(modulus=n, exponent=e)
     return RSAKeyPair(privateKey, publicKey)
-
-
-def main():
-    print("Main method")

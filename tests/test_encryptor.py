@@ -2,8 +2,10 @@
 
 import unittest
 import os, sys
+from filecmp import cmp
 from rsapy.encryptor import *
 from rsapy.util import *
+
 
 class TestUtil(unittest.TestCase):
     def test_gcd(self):
@@ -40,40 +42,48 @@ class TestEncryptor(unittest.TestCase):
         rkp = generate_keys()
 
         message = 150
-        encr = rkp.encrypt(message)
-        decr = rkp.decrypt(encr)
+        encr = rkp._encrypt(message)
+        decr = rkp._decrypt(encr)
         self.assertEqual(decr, message)
 
-        rkp = generate_keys(size=64)
+        rkp = generate_keys(size=512)
         message = int.from_bytes(os.urandom(60), sys.byteorder)
-        encr = rkp.encrypt(message)
-        decr = rkp.decrypt(encr)
+        encr = rkp._encrypt(message)
+        decr = rkp._decrypt(encr)
         self.assertEqual(decr, message)
 
     def test_file_io(self):
-        rkp = generate_keys(64)
-        rkp.private_key.write_to_file("private.pem")
-        rkp.public_key.write_to_file("public.pem")
+        rkp = generate_keys(512)
+        priv_key_file = os.path.join(os.path.dirname(__file__), "private.pem")
+        pub_key_file = os.path.join(os.path.dirname(__file__), "public.pem")
+        rkp.private_key.write_to_file(priv_key_file)
+        rkp.public_key.write_to_file(pub_key_file)
 
-        pubkey = RSAPublicKey.from_file("public.pem")
+        pubkey = RSAPublicKey.from_file(pub_key_file)
         self.assertEqual(rkp.public_key, pubkey)
 
-        privkey =  RSAPrivateKey.from_file("private.pem")
+        privkey =  RSAPrivateKey.from_file(priv_key_file)
         self.assertEqual(rkp.private_key, privkey)
 
     def test_file_encryption(self):
-        rkp = generate_keys(64)
-        rkp.encrypt_file(infilename="testfile.txt",outfilename="testfile.encr")
-        rkp.decrypt_file(infilename="testfile.encr",outfilename="outfile.txt")
+        rkp = generate_keys(512)
+        testfile = os.path.join(os.path.dirname(__file__), "testfile.txt")
+        testfile_encr = os.path.join(os.path.dirname(__file__), "testfile.encr")
+        outfile = os.path.join(os.path.dirname(__file__), "outfile.txt")
+        rkp.encrypt_file(testfile,testfile_encr)
+        rkp.decrypt_file(testfile_encr,outfile)
 
-        origfile = open("testfile.txt", 'r')
-        outfile = open("outfile.txt", 'r')
-        orig_lines = origfile.readlines()
-        out_lines = outfile.readlines()
-        origfile.close()
-        outfile.close()
+        self.assertEqual(cmp(testfile, outfile), True)
 
-        self.assertEqual(orig_lines, out_lines)
+
+    def test_file_encryption_2(self):
+        rkp = generate_keys(512)
+        testfile = os.path.join(os.path.dirname(__file__), "test-img.png")
+        testfile_encr = os.path.join(os.path.dirname(__file__), "test-img.encr")
+        outfile = os.path.join(os.path.dirname(__file__), "test-img-out.png")
+
+        self.assertRaises(OverflowError, rkp.encrypt_file, testfile, testfile_encr)
+        self.assertRaises(OverflowError, rkp.decrypt_file, testfile, testfile_encr)
 
 if __name__ == "__main__":
     unittest.main()
